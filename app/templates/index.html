@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Stations</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>Weather Observation Stations</header>
+    <main>
+        <div id="loading" class="loading">Loading stations, please wait...</div>
+        <div id="error" class="error" style="display: none;">Failed to fetch station data. Please try again later.</div>
+        <table id="stationsTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Station Name</th>
+                    <th>Identifier</th>
+                    <th>Elevation (m)</th>
+                    <th>Time Zone</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </main>
+    <script>
+        async function fetchStations() {
+            try {
+                const response = await fetch('/stations');
+                if (!response.ok) throw new Error('Failed to fetch stations');
+                const data = await response.json();
+                populateTable(data.features);
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+            }
+        }
+
+        function populateTable(features) {
+            const table = document.getElementById('stationsTable');
+            const tbody = table.querySelector('tbody');
+            tbody.innerHTML = ''; // Clear previous data
+
+            features.forEach(feature => {
+                const station = feature.properties;
+                const row = `
+                    <tr>
+                        <td>${station.name || 'N/A'}</td>
+                        <td>${station.stationIdentifier || 'N/A'}</td>
+                        <td>${station.elevation?.value || 'N/A'}</td>
+                        <td>${station.timeZone || 'N/A'}</td>
+                    </tr>
+                `;
+                tbody.insertAdjacentHTML('beforeend', row);
+            });
+
+            document.getElementById('loading').style.display = 'none';
+            table.style.display = 'table';
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchStations);
+    </script>
+</body>
+</html>
